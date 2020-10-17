@@ -1,0 +1,12 @@
+name: milestone4
+title: milestone4
+username:
+account: reemkal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3035876
+bundleId: 3751291
+url: https://reemkal.shinyapps.io/milestone4/
+when: 1602906852.92048
+asMultiple: FALSE
+asStatic: FALSE
