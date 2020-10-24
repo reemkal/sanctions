@@ -14,7 +14,7 @@ library(janitor)
 
 # Define UI 
 ui <- navbarPage(
-    "Milestone 4",
+    "Milestone 5",
     tabPanel("About", 
              titlePanel(strong("About")),
              h3("Project Background and Introduction"),
@@ -51,7 +51,7 @@ ui <- navbarPage(
              Science. I'm interested in and passionate about international 
              development and human rights. 
              
-             This is my Milestone 4 for my final project in the Gov50 Data 
+             This is my Milestone 5 for my final project in the Gov50 Data 
              Science Class. You can reach me at reemali@college.harvard.edu.")),
 
     tabPanel("Model",
@@ -71,9 +71,24 @@ ui <- navbarPage(
              birthday. The infant mortality rate is the number of infant deaths 
              for every 1,000 live births.'"),
              br(),
-             plotOutput("first_plot"), 
+             plotOutput("first_plot")), 
              
-    ))
+     tabPanel("Imports",
+             titlePanel(strong("Impact of Sanctions on Imports")),
+             p("TBD"), 
+             h3("Imports in 1980 and 2015"), 
+             p("TBD'"),
+             br(),
+             plotOutput("sanc_imp")),
+             
+     tabPanel("Exports",
+             titlePanel(strong("Impact of Sanctions on Exports")),
+             p("TBD"), 
+             h3("Exports in 1980 and 2015"), 
+             p("TBD'"),
+             br(),
+             plotOutput("sanc_exp"))
+    )
 
 # Define server logic 
 server <- function(input, output) {
@@ -86,13 +101,54 @@ server <- function(input, output) {
         ggplot(first_plot, aes(x = countryname, y = infant_mortality_rate, 
                                fill = us_length)) +
             geom_col() +
-            facet_wrap(~ year) +
-            coord_flip()
+            facet_wrap(~ Year) +
+            coord_flip() +
+            labs(title = "Impact of US Sanctions on Infantr Mortality Rate Internationally", 
+                 x = "Country Name", y = "Infant Mortality Rate") +
+            theme_bw() +
+            theme(axis.text.x = element_text(size = 2, angle = 45))
         
     })
     
 }
 
+server <- function(input, output) {
+    
+    
+    sanc_imp <- read_csv("sanc_imp.csv")
+    
+    output$sanc_imp <- renderPlot({
+        
+        ggplot(sanc_imp, aes(x = country_name, y = Imports, fill = us_length)) +
+            geom_col() +
+            facet_wrap(~ Year) +
+            coord_flip() +
+            labs(title = "Impact of US Sanctions on Imports Internationally", 
+                 x = "Country Name", y = "Imports") +
+            theme_bw()
+        
+    })
+    
+}
+
+server <- function(input, output) {
+    
+    
+    sanc_exp <- read_csv("sanc_exp.csv")
+    
+    output$sanc_exp <- renderPlot({
+        
+        ggplot(sanc_exp, aes(x = country_name, y = Exports, fill = us_length)) +
+            geom_col() +
+            facet_wrap(~ Year) +
+            coord_flip() +
+            labs(title = "Impact of US Sanctions on Exports Internationally", 
+                 x = "Country Name", y = "Exports") +
+            theme_bw()
+        
+    })
+    
+}
 
 # Run the application
 shinyApp(ui = ui, server = server)    

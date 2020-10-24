@@ -12,58 +12,177 @@ library(readxl)
 library(janitor)
 ```
 
-Sanctions Dataset 
-
 ```{r, sanctions}
 sanctions <- read_xls("sanctions/EUSANCT_Dataset_Case-level.xls") %>%
   select(targetstate_name, sender_combination, startyearEU,
          startyearUS, startyearUN, endyearEU, endyearUS, endyearUN, 
          sanctions_success ) %>%
   arrange(desc(startyearUS)) %>%
-  rename("countryname" = targetstate_name) %>%
-  mutate(us_length = endyearUS - startyearUS)
-
-
-  
+  rename("Country Name" = targetstate_name) %>%
+  mutate(us_length = endyearUS - startyearUS) %>%
+  mutate(eu_length = endyearEU - startyearEU) %>%
+  mutate(un_length = endyearUN - startyearUN) %>%
+  filter(!endyearUS <= "1980") %>%
+  select("Country Name", "sender_combination", "startyearUS", "endyearUS", 
+         "sanctions_success", "us_length", "eu_length", "un_length")
+sanctions
 ```
 
 ```{r, democracy}
 democracy <- read_csv("democracy/democracy.csv") %>%
-  select("Country Name", "Indicator", "1980", "2018") %>%
-  pivot_wider(names_from = "Indicator", values_from = c("1980", "2018"))
+  select("Country Name", "Indicator", "1980", "2015") %>%
+  filter(Indicator %in% c("Institutionalized Democracy", "Institutionalized Autocracy")) %>%
+  pivot_longer(cols = c("1980", "2015"), names_to = "Year", values_to = "Score") %>%
+  pivot_wider(names_from = "Indicator", values_from = "Score") %>%
+  drop_na()
+democracy
 ```
 
 ```{r, health}
 health <- read_excel("health/health.xls") %>%
   slice(3:267) %>%
   row_to_names(row_number = 1) %>%
-  select("Country Name", "1980", "1981", "1982", "1983", "1984", "1986", "1987",
-         "1988", "1989", "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999",
-         "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010",
-         "2011", "2012", "2013", "2014", "2015") %>%
-drop_na() %>%
-  rename("countryname" = "Country Name")
+  pivot_longer(cols = -c("Country Name", "Country Code", "Indicator Name", 
+                         "Indicator Code"), names_to = "Year", 
+                 values_to = "Infant Mortality Rate") %>%
+  select("Country Name", "Year", "Infant Mortality Rate") %>%
+  drop_na() 
 ```
 
+```{r, imports}
+imports <- read_csv("imports/API_NE.IMP.GNFS.CD_DS2_en_csv_v2_1495168/API_NE.IMP.GNFS.CD_DS2_en_csv_v2_1495168.csv", 
+                    skip = 4) %>%
+  pivot_longer(cols = -c("Country Name", "Country Code", "Indicator Name", 
+                         "Indicator Code"), names_to = "Year", 
+               values_to = "Imports") %>%
+  select("Country Name", "Year", "Imports") %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  arrange(Year) %>%
+  drop_na()
+imports
+```
+
+```{r, exports}
+exports <- read_csv("exports/API_NE.EXP.GNFS.CD_DS2_en_csv_v2_1498092/API_NE.EXP.GNFS.CD_DS2_en_csv_v2_1498092.csv", 
+                    skip = 4) %>%
+    pivot_longer(cols = -c("Country Name", "Country Code", "Indicator Name", 
+                         "Indicator Code"), names_to = "Year", 
+               values_to = "Exports") %>%
+  select("Country Name", "Year", "Exports") %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  arrange(Year) %>%
+  drop_na()
+```
+
+```{r, education}
+education <- read_csv("education/API_SE.ADT.LITR.ZS_DS2_en_csv_v2_1495116/API_SE.ADT.LITR.ZS_DS2_en_csv_v2_1495116.csv",
+                      skip= 4) %>%
+  pivot_longer(cols = -c("Country Name", "Country Code", "Indicator Name", 
+                         "Indicator Code"), names_to = "Year", 
+               values_to = "Adult Literacy Rate") %>%
+  select("Country Name", "Year", "Adult Literacy Rate") %>%
+  drop_na()
+```
+
+```{r, sanctions and imports}
+sanc_imp <- full_join(sanctions, imports, by = "Country Name") 
+sanc_imp <- sanc_imp %>%
+  rename("country_name" = "Country Name") %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  arrange(desc(us_length)) %>%
+  slice(1:60)
+
+write_csv(sanc_imp, "sanc_imp.csv")
+
+ggplot(sanc_imp, aes(x = country_name, y = Imports, fill = us_length)) +
+  geom_col() +
+  facet_wrap(~ Year) +
+  coord_flip() +
+  labs(title = "Impact of US Sanctions on Imports Internationally", 
+       x = "Country Name", y = "Imports") +
+  theme_bw()
+```
+
+```{r, sanctions and exports}
+sanc_exp <- full_join(sanctions, exports, by = "Country Name") 
+sanc_exp <- sanc_exp %>%
+  rename("country_name" = "Country Name") %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  arrange(desc(us_length)) %>%
+  slice(1:60)
+
+write_csv(sanc_exp, "sanc_exp.csv")
+
+ggplot(sanc_exp, aes(x = country_name, y = Exports, fill = us_length)) +
+  geom_col() +
+  facet_wrap(~ Year) +
+  coord_flip() +
+    labs(title = "Impact of US Sanctions on Exports Internationally", 
+       x = "Country Name", y = "Exports") +
+  theme_bw()
+```
+
+```{r, sanctions and democracy}
+sanc_dem <- full_join(sanctions, democracy, by = "Country Name")
+sanc_dem <- sanc_dem %>%
+  rename("country_name" = "Country Name") %>%
+  arrange(desc(us_length)) %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  rename("autocracy" = "Institutionalized Autocracy")
+ggplot(sanc_dem, aes(x = country_name, y = autocracy, fill = us_length)) +
+  geom_col() +
+  facet_wrap(~ Year) +
+  coord_flip()
+sanc_dem
+```
+
+
+
+
+
+
+
+
+```{r, master_dataset}
+
+#appears to be too big for R memory
+
+dem_sanc <- full_join(sanctions, democracy, by = "Country Name")
+health_imports <- full_join(health, imports, by = "Country Name")
+exports_educ <- full_join(exports, education, by = "Country Name") 
+half <- full_join(dem_sanc, health_imports, by = "Country Name")
+master_dataset <- full_join(half, exports_educ, by = "Country Name")
+```
+
+
 ```{r}
-combining_data <- full_join(sanctions, health, by = "countryname")
+combining_data <- full_join(sanctions, health, by = "Country Name")
 
 
 
 first_plot <- combining_data %>%
   filter(us_length > 5) %>%
-  select(countryname, us_length, "1980", "2015") %>%
-  pivot_longer(cols = c("1980", "2015"), names_to = "year", 
-               values_to = "infant_mortality_rate") %>%
   arrange(desc(us_length)) %>%
-  slice(1:20) 
+  rename("countryname" = "Country Name") %>%
+  rename("infant_mortality_rate" = "Infant Mortality Rate") %>%
+  filter(Year %in% c("1980", "2015")) %>%
+  slice(1:40) 
 
 write_csv(first_plot, "first_plot.csv")
   
 ggplot(first_plot, aes(x = countryname, y = infant_mortality_rate, 
                        fill = us_length)) +
   geom_col() +
-  facet_wrap(~ year) +
-  coord_flip()
+  facet_wrap(~ Year) +
+  coord_flip() +
+    labs(title = "Impact of US Sanctions on Infantr Mortality Rate Internationally", 
+       x = "Country Name", y = "Infant Mortality Rate") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 2, angle = 45))
+   
+```
+
+```{r}
+combining_data
 ```
 
