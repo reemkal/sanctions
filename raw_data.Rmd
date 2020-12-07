@@ -12,6 +12,7 @@ library(readxl)
 library(janitor)
 library(gapminder)
 library(gganimate)
+library(rstanarm)
 ```
 
 ```{r, sanctions}
@@ -28,9 +29,1198 @@ sanctions <- read_xls("sanctions/EUSANCT_Dataset_Case-level.xls") %>%
          "sanctions_success", "us_length", "eu_length", "un_length")
 ```
 
+```{r sanctions cleaned}
 
-```{r}
+#Introductory graph that shows the trend of increasing US sanctions over time 
+
 sanctions_health_final <- readRDS("~/Desktop/Projects/final-project/FINAL.RDS")
+
+sanctions <- sanctions_health_final %>%
+  rename("countryname" = "Country Name") %>%
+  rename("infant_mortality" = "Infant Mortality Rate") %>%
+  mutate("Year" = as.numeric(Year), 
+         "infant_mortality" = as.numeric(infant_mortality),
+         "us_length" = as.numeric(us_length)) %>%
+  filter(Year >= 1980) %>% 
+  mutate(us_length = ifelse(is.na(us_length), 0, us_length)) %>%
+  filter(us_length != 0)
+  
+ggplot(sanctions, aes(x = Year, y = us_length)) +
+    geom_point(alpha = 0.5, color = "darkorchid1") +
+    transition_reveal(Year) +
+    labs(title = "Trend in US Sanctions Worldwide (1980-2015)", 
+         x = "Year", y = "Length of US Sanctions") +
+  theme_bw()
+
+write_csv(sanctions, "sanctions.csv")
+```
+
+```{r health indicator}
+
+#Two types of graphs will be displayed on this page - the first, a general graph
+#illustrating the trend in infant mortality rates over the years
+
+#need to figure out how to assign a fill so that it's pretty + colorful
+
+health_filtered <- sanctions_health_final %>%
+  rename("countryname" = "Country Name") %>%
+  rename("infant_mortality" = "Infant Mortality Rate") %>%
+  mutate("Year" = as.numeric(Year), 
+         "infant_mortality" = as.numeric(infant_mortality),
+         "us_length" = as.numeric(us_length)) %>%
+  filter(Year >= 1980) %>% 
+  mutate(us_length = ifelse(is.na(us_length), 0, us_length)) %>%
+  filter(us_length != 0) %>%
+  select(countryname, Year, infant_mortality, us_length)
+
+ggplot(health_filtered, aes(x = Year, y = infant_mortality, size = us_length)) +
+  geom_point(alpha = 0.5, color = "darkorchid1") +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Infant Mortality Rates Over the Years (1980-2015)", x = "Year", 
+       y = "Infant Mortality Rate per 1000 Babies Born", 
+       size = "Length of US Sanctions") +
+  theme_bw()
+
+write_csv(health_filtered, "health_filtered.csv")
+
+```
+
+```{r health individual graphs}
+
+#The second will be accessible through a drop down menu illustrating the trend
+#in infant mortality rates over the years while demarking the point where
+#sanctions begun and when they ended or were paused
+
+#painfully did this by hand until I realized that it could be done within shiny 
+#;(
+
+Afghanistan <- health_filtered %>%
+  filter(countryname == "Afghanistan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Afghanistan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Andorra <- health_filtered %>%
+  filter(countryname == "Andorra") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Andorra",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Austria <- health_filtered %>%
+  filter(countryname == "Austria") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Austria",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Azerbaijan <- health_filtered %>%
+  filter(countryname == "Azerbaijan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Azerbaijan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Barbados <- health_filtered %>%
+  filter(countryname == "Barbados") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Barbados",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Belize <- health_filtered %>%
+  filter(countryname == "Belize") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Belize",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Benin <- health_filtered %>%
+  filter(countryname == "Benin") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Benin",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Bolivia <- health_filtered %>%
+  filter(countryname == "Bolivia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Bolivia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Bosnia <- health_filtered %>%
+  filter(countryname == "Bosnia and Herzegovina") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Bosnia and Herzegovina",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Botswana <- health_filtered %>%
+  filter(countryname == "Botswana") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Botswana",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Brazil <- health_filtered %>%
+  filter(countryname == "Brazil") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Brazil",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Bulgaria <- health_filtered %>%
+  filter(countryname == "Bulgaria") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Bulgaria",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Burkina <- health_filtered %>%
+  filter(countryname == "Burkina Faso") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Burkina Faso",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Cambodia <- health_filtered %>%
+  filter(countryname == "Cambodia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Cambodia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Cameroon <- health_filtered %>%
+  filter(countryname == "Cameroon") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Cameroon",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+CAR <- health_filtered %>%
+  filter(countryname == "Central African Republic") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Central African Republic",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Chad <- health_filtered %>%
+  filter(countryname == "Chad") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Chad",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Chile <- health_filtered %>%
+  filter(countryname == "Chile") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Chile",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+China <- health_filtered %>%
+  filter(countryname == "China") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in China",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Colombia <- health_filtered %>%
+  filter(countryname == "Colombia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Colombia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Costa <- health_filtered %>%
+  filter(countryname == "Costa Rica") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Costa Rica",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Croatia <- health_filtered %>%
+  filter(countryname == "Croatia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Croatia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Cyprus <- health_filtered %>%
+  filter(countryname == "Cyprus") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Cyprus",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Djibouti <- health_filtered %>%
+  filter(countryname == "Djibouti") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Djibouti",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Dominica <- health_filtered %>%
+  filter(countryname == "Dominica") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Dominica",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Ecuador <- health_filtered %>%
+  filter(countryname == "Ecuador") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Ecuador",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Salvador <- health_filtered %>%
+  filter(countryname == "El Salvador") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in El Salvador",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Estonia <- health_filtered %>%
+  filter(countryname == "Estonia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Estonia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Fiji <- health_filtered %>%
+  filter(countryname == "Fiji") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Fiji",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Finland <- health_filtered %>%
+  filter(countryname == "Finland") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Finland",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Gabon <- health_filtered %>%
+  filter(countryname == "Gabon") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Gabon",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Ghana <- health_filtered %>%
+  filter(countryname == "Ghana") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Ghana",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Guatemala <- health_filtered %>%
+  filter(countryname == "Guatemala") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Guatemala",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Guinea <- health_filtered %>%
+  filter(countryname == "Guinea") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Guinea",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Haiti <- health_filtered %>%
+  filter(countryname == "Haiti") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Haiti",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Honduras <- health_filtered %>%
+  filter(countryname == "Honduras") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Honduras",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+India <- health_filtered %>%
+  filter(countryname == "India") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in India",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Iraq <- health_filtered %>%
+  filter(countryname == "Iraq") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Iraq",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Ireland <- health_filtered %>%
+  filter(countryname == "Ireland") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Ireland",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Israel <- health_filtered %>%
+  filter(countryname == "Israel") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Israel",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Jordan <- health_filtered %>%
+  filter(countryname == "Jordan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Jordan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Kenya <- health_filtered %>%
+  filter(countryname == "Kenya") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Kenya",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Kuwait <- health_filtered %>%
+  filter(countryname == "Kuwait") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Kuwait",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Latvia <- health_filtered %>%
+  filter(countryname == "Latvia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Latvia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Lebanon <- health_filtered %>%
+  filter(countryname == "Lebanon") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Lebanon",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Lesotho <- health_filtered %>%
+  filter(countryname == "Lesotho") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Lesotho",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Liechtenstein <- health_filtered %>%
+  filter(countryname == "Liechtenstein") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Liechtenstein",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Malawi <- health_filtered %>%
+  filter(countryname == "Malawi") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Malawi",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Mali <- health_filtered %>%
+  filter(countryname == "Mali") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Mali",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Malta <- health_filtered %>%
+  filter(countryname == "Malta") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Malta",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Marshall <- health_filtered %>%
+  filter(countryname == "Marshall Islands") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Marshall Islands",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Mauritius <- health_filtered %>%
+  filter(countryname == "Mauritius") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Mauritius",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Mexico <- health_filtered %>%
+  filter(countryname == "Mexico") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Mexico",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Mongolia <- health_filtered %>%
+  filter(countryname == "Mongolia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Mongolia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Montenegro <- health_filtered %>%
+  filter(countryname == "Montenegro") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Montenegro",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Myanmar <- health_filtered %>%
+  filter(countryname == "Myanmar") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Myanmar",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Namibia <- health_filtered %>%
+  filter(countryname == "Namibia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Namibia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Nauru <- health_filtered %>%
+  filter(countryname == "Nauru") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Nauru",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Nicaragua <- health_filtered %>%
+  filter(countryname == "Nicaragua") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Nicaragua",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Niger <- health_filtered %>%
+  filter(countryname == "Niger") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Niger",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Nigeria <- health_filtered %>%
+  filter(countryname == "Nigeria") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Nigeria",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Pakistan <- health_filtered %>%
+  filter(countryname == "Pakistan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Pakistan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Panama <- health_filtered %>%
+  filter(countryname == "Panama") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Panama",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Paraguay <- health_filtered %>%
+  filter(countryname == "Paraguay") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Paraguay",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Peru <- health_filtered %>%
+  filter(countryname == "Peru") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Peru",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Romania <- health_filtered %>%
+  filter(countryname == "Romania") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Romania",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Rwanda <- health_filtered %>%
+  filter(countryname == "Rwanda") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Rwanda",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Samoa <- health_filtered %>%
+  filter(countryname == "Samoa") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Samoa",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Marino <- health_filtered %>%
+  filter(countryname == "San Marino") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in San Marino",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Saudi <- health_filtered %>%
+  filter(countryname == "Saudi Arabia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Saudi Arabia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Senegal <- health_filtered %>%
+  filter(countryname == "Senegal") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Senegal",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Sierra <- health_filtered %>%
+  filter(countryname == "Sierra Leone") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Sierra Leone",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Slovenia <- health_filtered %>%
+  filter(countryname == "Slovenia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Slovenia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Somalia <- health_filtered %>%
+  filter(countryname == "Somalia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Somalia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+SA <- health_filtered %>%
+  filter(countryname == "South Africa") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in South Africa",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Sri <- health_filtered %>%
+  filter(countryname == "Sri Lanka") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Sri Lanka",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Grenadines <- health_filtered %>%
+  filter(countryname == "St. Vincent and the Grenadines") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in St. Vincent and the Grenadines",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Sudan <- health_filtered %>%
+  filter(countryname == "Sudan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Sudan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Sweden <- health_filtered %>%
+  filter(countryname == "Sweden") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Sweden",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Switzerland <- health_filtered %>%
+  filter(countryname == "Switzerland") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Switzerland",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Tajikistan <- health_filtered %>%
+  filter(countryname == "Tajikistan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Tajikistan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Tanzania <- health_filtered %>%
+  filter(countryname == "Tanzania") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Tanzania",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Thailand <- health_filtered %>%
+  filter(countryname == "Thailand") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Thailand",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Trinidad <- health_filtered %>%
+  filter(countryname == "Trinidad and Tobago") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Trinidad and Tobago",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Turkey <- health_filtered %>%
+  filter(countryname == "Turkey") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Turkey",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Uganda <- health_filtered %>%
+  filter(countryname == "Uganda") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Uganda",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Ukraine <- health_filtered %>%
+  filter(countryname == "Ukraine") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Ukraine",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Uruguay <- health_filtered %>%
+  filter(countryname == "Uruguay") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Uruguay",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Uzbekistan <- health_filtered %>%
+  filter(countryname == "Uzbekistan") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Uzbekistan",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Vietnam <- health_filtered %>%
+  filter(countryname == "Vietnam") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Vietnam",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+Zambia <- health_filtered %>%
+  filter(countryname == "Zambia") %>%
+  ggplot(aes(x = Year, y = infant_mortality, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Zambia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+```
+
+
+```{r democracy indicator}
+
+#filtering the democracy dataset 
+
+democracy <- read_csv("democracy/democracy.csv") %>%
+   select("Country Name", "Indicator", "1980", "1981" , "1982", "1983", "1984", 
+          "1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
+          "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", 
+          "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", 
+          "2012", "2013", "2014", "2015") %>%
+  filter(Indicator %in% c("democracy", 
+                          "autocracy")) %>%
+  pivot_longer(cols = c("1980", "1981" , "1982", "1983", "1984", "1985", 
+                        "1981", "1987", "1988", "1989", "1990", "1991", "1992", 
+                        "1993", "1994", "1995", "1996", "1997", "1998", "1999", 
+                        "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+                        "2007", "2008", "2009", "2010", "2011", "2012", "2013", 
+                        "2014", "2015"), names_to = "Year", 
+               values_to = "Score") %>%
+  filter(Score != -66) %>%
+  rename("countryname" = "Country Name") %>%
+  drop_na() %>%
+  mutate("Year" = as.numeric(Year)) %>% 
+  pivot_wider(names_from = "Indicator", values_from = "Score")
+
+#combining the democracy dataset with the filtered health and sanctions one
+
+sanc_health_dem <- health_filtered %>%
+  left_join(democracy, by = c("countryname", "Year"))
+
+ggplot(sanc_health_dem, aes(x = Year, y = democracy, size = us_length)) +
+  geom_point(alpha = 0.4) +
+  #ylim(0, 10) +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Democracy and Autocracy Scores Over the Years", x = 'Year', 
+       y = "Indicator Score") +
+  #facet_wrap(~ Indicator) +
+  theme_bw()
+```
+
+```{r education}
+
+#filtering down the education dataset 
+
+education <- read_csv("education/API_SE.ADT.LITR.ZS_DS2_en_csv_v2_1495116/API_SE.ADT.LITR.ZS_DS2_en_csv_v2_1495116.csv",
+                      skip= 4) %>%
+  select("Country Name", "Indicator Name", "1980", "1981" , "1982", "1983", "1984", 
+          "1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
+          "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", 
+          "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", 
+          "2012", "2013", "2014", "2015") %>%
+  pivot_longer(cols = c("1980", "1981" , "1982", "1983", "1984", "1985", 
+                        "1981", "1987", "1988", "1989", "1990", "1991", "1992", 
+                        "1993", "1994", "1995", "1996", "1997", "1998", "1999", 
+                        "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+                        "2007", "2008", "2009", "2010", "2011", "2012", "2013", 
+                        "2014", "2015"), names_to = "Year", 
+               values_to = "adult_literacy") %>%
+  rename("countryname" = "Country Name") %>%
+  drop_na() %>%
+  mutate("Year" = as.numeric(Year)) %>%
+  select("countryname", "Year", "adult_literacy")
+
+sanc_health_dem_edu <- sanc_health_dem %>%
+  left_join(education, by = c("countryname", "Year"))
+
+ggplot(sanc_health_dem_edu, aes(x = Year, y = adult_literacy, 
+                                size = us_length)) +
+  geom_point(alpha = 0.5, color = "darkorchid1") +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Adult Literacy Rates Over the Years (1980-2015)", x = "Year", 
+       y = "Adult Literacy Rates", 
+       size = "Length of US Sanctions") +
+  theme_bw()
+
+write_csv(sanc_health_dem_edu, "sanc_health_dem_edu.csv")
+
+sanc_health_dem_edu %>%
+  filter(countryname == "Bolivia") %>%
+  ggplot(aes(x = Year, y = adult_literacy, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Zambia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+```
+
+```{r imports}
+
+imports <- read_csv("imports/API_NE.IMP.GNFS.CD_DS2_en_csv_v2_1495168/API_NE.IMP.GNFS.CD_DS2_en_csv_v2_1495168.csv", 
+                    skip = 4) %>% 
+  select("Country Name", "Indicator Name", "1980", "1981" , "1982", "1983", "1984", 
+          "1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
+          "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", 
+          "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", 
+          "2012", "2013", "2014", "2015") %>%
+  pivot_longer(cols = c("1980", "1981" , "1982", "1983", "1984", "1985", 
+                        "1981", "1987", "1988", "1989", "1990", "1991", "1992", 
+                        "1993", "1994", "1995", "1996", "1997", "1998", "1999", 
+                        "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+                        "2007", "2008", "2009", "2010", "2011", "2012", "2013", 
+                        "2014", "2015"), names_to = "Year", 
+               values_to = "imports") %>%
+  rename("countryname" = "Country Name") %>%
+  drop_na() %>%
+  mutate("Year" = as.numeric(Year)) %>%
+  select("countryname", "Year", "imports")
+
+sanc_health_dem_edu_imp <- sanc_health_dem_edu %>%
+  left_join(imports, by = c("countryname", "Year"))
+
+ggplot(sanc_health_dem_edu_imp, aes(x = Year, y = imports, 
+                                size = us_length)) +
+  geom_point(alpha = 0.5, color = "darkorchid1") +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Imports Over the Years (1980-2015)", x = "Year", 
+       y = "Imports", 
+       size = "Length of US Sanctions") +
+  theme_bw()
+
+write_csv(sanc_health_dem_edu_imp, "sanc_health_dem_edu_imp.csv")
+
+sanc_health_dem_edu_imp %>%  
+  filter(countryname == "Bosnia") %>%
+  ggplot(aes(x = Year, y = imports, color = us_length)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Infant Mortality Rate Progression in Bosnia",
+       x = "Year", y = "Infant Mortality Rate", 
+       color = "Length of US Sanctions") +
+  theme_bw()
+
+```
+
+```{r exports}
+
+exports <- read_csv("exports/API_NE.EXP.GNFS.CD_DS2_en_csv_v2_1498092/API_NE.EXP.GNFS.CD_DS2_en_csv_v2_1498092.csv", 
+                    skip = 4) %>%
+  select("Country Name", "Indicator Name", "1980", "1981" , "1982", "1983", "1984", 
+          "1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
+          "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", 
+          "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", 
+          "2012", "2013", "2014", "2015") %>%
+  pivot_longer(cols = c("1980", "1981" , "1982", "1983", "1984", "1985", 
+                        "1981", "1987", "1988", "1989", "1990", "1991", "1992", 
+                        "1993", "1994", "1995", "1996", "1997", "1998", "1999", 
+                        "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+                        "2007", "2008", "2009", "2010", "2011", "2012", "2013", 
+                        "2014", "2015"), names_to = "Year", 
+               values_to = "exports") %>%
+  rename("countryname" = "Country Name") %>%
+  drop_na() %>%
+  mutate("Year" = as.numeric(Year)) %>%
+  select("countryname", "Year", "exports")
+
+final <- sanc_health_dem_edu_imp %>%
+  left_join(exports, by = c("countryname", "Year"))
+
+#plotting initial graph of sanctions v exports
+
+ggplot(final, aes(x = Year, y = exports, 
+                                size = us_length)) +
+  geom_point(alpha = 0.5, color = "darkorchid1") +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Exports Over the Years (1980-2015)", x = "Year", 
+       y = "Exports", 
+       size = "Length of US Sanctions") +
+  theme_bw()
+
+write_csv(final, "final.csv")
+```
+
+```{r model}
+
+final_model <- final %>%
+  mutate(us_length = ifelse(is.na(us_length), 0, us_length),
+         Year = Year - 1980)
+
+fit_1 <- stan_glm(data = final_model, 
+                  formula = infant_mortality ~ us_length + Year, refresh = 0)
+
+print(fit_1, digits = 4)
+
+new_obs <- tibble(us_length = c(1:25), Year = c(1:25))
+
+posterior_epred(fit_1, newdata = new_obs) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric)
+
+write_csv(final_model, "final_model.csv")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, infant mortality rate}
   
 sanctions_health_final <- 
   sanctions_health_final %>%
@@ -41,17 +1231,56 @@ sanctions_health_final <-
   select(countryname, Year, infant_mortality, us_length)
 
 #sanctions_health_imports %>%
-ggplot(sanctions_health_final, mapping = aes(x = Year, y = infant_mortality, color = countryname)) +
+ggplot(sanctions_health_final, mapping = aes(x = Year, y = infant_mortality, 
+                                             color = countryname, size = us_length)) +
   geom_point(alpha = 0.4) +
-  transition_reveal(Year)
+  transition_reveal(Year) +
   # scale_color_manual(values = country_colors) +
-  # scale_size(range = c(2, 12)) +
+  scale_size(range = c(2, 12))
   # labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
   #transition_time(year) +
   #ease_aes('linear')
 ```
 
 ```{r, democracy}
+democracy <- read_csv("democracy/democracy.csv") %>%
+   select("Country Name", "Indicator", "1980", "1981" , "1982", "1983", "1984", 
+          "1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
+          "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", 
+          "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", 
+          "2012", "2013", "2014", "2015") %>%
+  filter(Indicator %in% c("Institutionalized Democracy", 
+                          "Institutionalized Autocracy")) %>%
+  pivot_longer(cols = c("1980", "1981" , "1982", "1983", "1984", "1985", 
+                        "1981", "1987", "1988", "1989", "1990", "1991", "1992", 
+                        "1993", "1994", "1995", "1996", "1997", "1998", "1999", 
+                        "2000", "2001", "2002", "2003", "2004", "2005", "2006", 
+                        "2007", "2008", "2009", "2010", "2011", "2012", "2013", 
+                        "2014", "2015"), names_to = "Year", 
+               values_to = "Score") %>%
+  filter(Score != -66) %>%
+  rename("countryname" = "Country Name") %>%
+  drop_na() %>%
+  mutate("Year" = as.numeric(Year)) %>%
+  pivot_wider(names_from = "Indicator", values_from = "Score")
+
+write_csv(democracy, "democracy.csv")
+
+ggplot(sanctions_all, aes(x = Year, y = Score, size = us_length, color = countryname)) +
+  geom_point(alpha = 0.4) +
+  ylim(0, 10) +
+  transition_reveal(Year) +
+  scale_size(range = c(2, 12)) +
+  labs(title = "Democracy and Autocracy Scores Over the Years", x = 'Year', 
+       y = "Indicator Score") +
+  facet_wrap(~ Indicator) +
+  theme_bw()
+  
+  
+
+```
+
+```{r}
 democracy <- read_csv("democracy/democracy.csv") %>%
    #select("Country Name", "Indicator", "1980", "1981" , "1982", "1983", "1984", 
           #"1985", "1981", "1987", "1988", "1989", "1990", "1991", "1992", "1993", 
@@ -71,19 +1300,8 @@ democracy <- read_csv("democracy/democracy.csv") %>%
   rename("countryname" = "Country Name") %>%
   drop_na() %>%
   mutate("Year" = as.numeric(Year))
-
-write_csv(democracy, "democracy.csv")
-
-ggplot(democracy, aes(x = Year, y = Score, size = Score, color = countryname)) +
-  geom_point(alpha = 0.4) +
-  ylim(0, 10) +
-  transition_reveal(Year) +
-  scale_size(range = c(2, 12)) +
-  labs(title = "Democracy and Autocracy Scores Over the Years", x = 'Year', 
-       y = "Indicator Score") +
-  facet_wrap(~ Indicator) +
-  theme_bw()
 ```
+
 
 ```{r, health}
 health <- read_excel("health/health.xls") %>%
@@ -187,25 +1405,6 @@ ggplot(sanc_dem, aes(x = country_name, y = autocracy, fill = us_length)) +
   coord_flip()
 sanc_dem
 ```
-
-
-
-
-
-
-
-
-```{r, master_dataset}
-
-#appears to be too big for R memory
-
-dem_sanc <- full_join(sanctions, democracy, by = "Country Name")
-health_imports <- full_join(health, imports, by = "Country Name")
-exports_educ <- full_join(exports, education, by = "Country Name") 
-half <- full_join(dem_sanc, health_imports, by = "Country Name")
-master_dataset <- full_join(half, exports_educ, by = "Country Name")
-```
-
 
 ```{r}
 combining_data <- full_join(sanctions, health, by = "Country Name")

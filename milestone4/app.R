@@ -11,10 +11,13 @@ library(shiny)
 library(tidyverse)
 library(readxl)
 library(janitor)
+library(gapminder)
+library(gganimate)
+library(gifski)
 
 # Define UI 
 ui <- navbarPage(
-    "Milestone 5",
+    "Failed Punishment: How US Sanctions Have Impacted Development Worldwide",
     tabPanel("About", 
              titlePanel(strong("About")),
              h3("Project Background and Introduction"),
@@ -59,12 +62,17 @@ ui <- navbarPage(
     
     tabPanel("Public Health",
              titlePanel(strong("Impact of Sanctions on Public Health")),
-             p("For years, public health has been an indicator of development.
-               If sanctions are truly as effective as the foreign policy 
-               negotiationf tactic they are deemed to be and are preferable
-               to other diplomatic forms of negotiation, then the longer the 
-               country has sanctions imposed, in theory, 
-               the better its public health system should be."), 
+             p("For years, public health has been an important indicator of 
+             development. If sanctions are truly meant to make the world a
+               better place by forcing countries to develop, then in theory, 
+               infant mortality rates, an important indicator of health, should 
+               not be negatively impacted and rise despite length of sanctions.
+               Of course, it is important to contextualize here that naturally,
+               over the course of years and with the development of modern 
+               medicine, infant mortality rates are projected to decrease.
+               The question is whether sanctions either increase those rates or
+               slow the potential development of the public health sector in
+               affected countries."), 
              h3("Infant Mortality Rate"), 
              p("According to the Center for Disease Control and Prevention, 
              'infant mortality is the death of an infant before his or her first 
@@ -87,34 +95,58 @@ ui <- navbarPage(
              h3("Exports in 1980 and 2015"), 
              p("TBD'"),
              br(),
-             plotOutput("sanc_exp"))
+             plotOutput("sanc_exp")),
+    
+    tabPanel("Democracy",
+             titlePanel(strong("Relative Democracy and Autocracy Scores Over the 
+                               Years")),
+             p("This section analyzes democracy and autocracy scores over the 
+               years for a number of countries and attempts to establish whether
+               sanctions had any positive or effective impact."), 
+             h3("Democracy and Autocracy Scores From 1980 to 2015"), 
+             p("This data and plot explores the relationship between sanctions, 
+               democracy, and autocracy scores. The issue with the data as 
+               currently presented, however, is that combining the sanctions 
+               dataset seems to result in no plot output for some reason, 
+               something I noticed when trying to achieve the same result with 
+               the health dataset. As such, the data as presented shows no 
+               interaction with the sanctions dataset, though I plan to assign 
+               that variable to the size argument for point sizes. Additionally, 
+               I wasn't able to figure out a way to manipulate the limits for 
+               the size argument, but now that I have a general template for my 
+               animated plots, I plan to work out these issues in recitation
+               and will hopefully have fully animated plots for each of my 
+               indicators for the next milestone."),
+             br(),
+             plotOutput("democracy"))
     )
 
 # Define server logic 
 server <- function(input, output) {
     
     
-    first_plot <- read_csv("first_plot.csv")
+    health_filtered <- read_csv("health_filtered.csv")
     
-    output$first_plot <- renderPlot({
+    output$health_filtered <- renderImage({
         
-        ggplot(first_plot, aes(x = countryname, y = infant_mortality_rate, 
-                               fill = us_length)) +
-            geom_col() +
-            facet_wrap(~ Year) +
-            coord_flip() +
-            labs(title = "Impact of US Sanctions on Infantr Mortality Rate Internationally", 
-                 x = "Country Name", y = "Infant Mortality Rate") +
-            theme_bw() +
-            theme(axis.text.x = element_text(size = 2, angle = 45))
+        outfile_1 <- tempfile(fileext='.gif')
         
+         health_plot <- ggplot(health_filtered, aes(x = Year, 
+                                                    y = infant_mortality, 
+                                                    size = us_length)) +
+            geom_point(alpha = 0.5, color = "darkorchid1") +
+            transition_reveal(Year) +
+            scale_size(range = c(2, 12)) +
+            labs(title = "Infant Mortality Rates Over the Years (1980-2015)", 
+                 x = "Year", 
+                 y = "Infant Mortality Rate per 1000 Babies Born", 
+                 size = "Length of US Sanctions") +
+            theme_bw()
+        
+         animate(health_plot, nframes = 75, 
+                 render = gifski_renderer("outfile.gif"))
+         list(src  = "outfile_1.gif", contentType = "image/gif")
     })
-    
-}
-
-server <- function(input, output) {
-    
-    
     sanc_imp <- read_csv("sanc_imp.csv")
     
     output$sanc_imp <- renderPlot({
@@ -128,11 +160,6 @@ server <- function(input, output) {
             theme_bw()
         
     })
-    
-}
-
-server <- function(input, output) {
-    
     
     sanc_exp <- read_csv("sanc_exp.csv")
     
@@ -148,7 +175,29 @@ server <- function(input, output) {
         
     })
     
+    democracy <- read_csv("democracy.csv")
+    
+    output$democracy <- renderImage({
+        
+        outfile <- tempfile(fileext='.gif')
+        democracy_plot <-
+            ggplot(democracy, aes(x = Year, y = Score, size = Score, 
+                                  color = countryname)) +
+            geom_point(alpha = 0.4) +
+            ylim(0, 10) +
+            transition_reveal(Year) +
+            scale_size(range = c(2, 12)) +
+            labs(title = "Democracy and Autocracy Scores Over the Years", 
+                 x = 'Year', y = "Indicator Score") +
+            facet_wrap(~ Indicator) +
+            theme_bw()
+        animate(democracy_plot, nframes = 75, render = gifski_renderer("outfile.gif"))
+        list(src  = "outfile.gif", contentType = "image/gif")
+        
+    })
 }
+
+
 
 # Run the application
 shinyApp(ui = ui, server = server)    

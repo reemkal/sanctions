@@ -1,0 +1,12 @@
+name: sanctions
+title: sanctions
+username:
+account: reemkal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3364060
+bundleId: 3955156
+url: https://reemkal.shinyapps.io/sanctions/
+when: 1607352920.03886
+asMultiple: FALSE
+asStatic: FALSE
