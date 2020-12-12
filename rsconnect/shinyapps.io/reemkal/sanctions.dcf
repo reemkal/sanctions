@@ -5,8 +5,8 @@ account: reemkal
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3364060
-bundleId: 3955156
+bundleId: 3978862
 url: https://reemkal.shinyapps.io/sanctions/
-when: 1607352920.03886
+when: 1607767270.7101
 asMultiple: FALSE
 asStatic: FALSE
