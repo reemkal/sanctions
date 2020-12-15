@@ -198,7 +198,7 @@ ui <- navbarPage(
                         states of anarchy and are converted to neutral polity
                         scores of 0. Those with -88 indicate a nation in a state
                         of transition and are 'prorated across the span of the 
-                        transition."),
+                        transition.'"),
                       br()),
   
                column(5,
@@ -363,7 +363,7 @@ ui <- navbarPage(
     #using the predictive models generated to create posterior distributions
     #for each of the development indicators
     
-    tabPanel("Predicting Development Based on Sanction Length",
+    tabPanel("Models: Predicting Development Based on Sanction Length",
              sidebarLayout(
                  sidebarPanel(
                      h3("Predicting Development Based on Sanction Length"),
@@ -384,24 +384,233 @@ ui <- navbarPage(
                  mainPanel(
                      tabsetPanel(id = "tabs",
                                  tabPanel("Predicted Infant Mortality Rate",
+                                          br(),
                                           plotOutput("infant"),
                                           br(),
+                                          p("The above model was generated
+                                            through the use of a stan_glm
+                                            model and the posterior_epred
+                                            function which essentially
+                                            extracts the posterior draws
+                                            of the conditional expectation,
+                                            generating a predictive model.
+                                            The regression table displayed
+                                            below illustrates the
+                                            results of running stan_glm
+                                            on the variable infant_mortality,
+                                            showing the impact of both
+                                            time and sanctions individually.
+                                            The table illustrates quite 
+                                            interesting results that lead
+                                            to significant conclusions 
+                                            about the impact of sanctions
+                                            on development variables such
+                                            as public health. As seen,
+                                            the median for the variable
+                                            us_length (indicating years
+                                            that the United States has
+                                            imposed sanctions is 0.23,
+                                            whereas that of Year (indicating
+                                            time since 1980 that has 
+                                            passed) is -1.2. These values 
+                                            indicate that time and the
+                                            presumed advancement of
+                                            modern medicine will naturally
+                                            reduce a nation's infant mortality 
+                                            rate over time, but the imposition
+                                            of sanctions will hinder that impact,
+                                            leading to a potential increase
+                                            in infant mortality rate if not
+                                            for the passage of time. Of course,
+                                            because the 95% confidence 
+                                            interval does include 0 for 
+                                            sanction length and the numbers
+                                            are quite variable, this conclusion
+                                            cannot be considered statistically
+                                            significant."),
                                           gt_output(outputId = "infant_reg")),
                                  tabPanel("Predicted Adult Literacy Rate",
+                                          br(),
                                           plotOutput("adult"),
                                           br(),
+                                          p("The above model was generated
+                                            through the use of a stan_glm
+                                            model and the posterior_epred
+                                            function which essentially
+                                            extracts the posterior draws
+                                            of the conditional expectation,
+                                            generating a predictive model.
+                                            The regression table displayed
+                                            below illustrates the
+                                            results of running stan_glm
+                                            on the variable adult_literacy,
+                                            showing the impact of both
+                                            time and sanctions individually.
+                                            The table illustrates quite 
+                                            interesting results that lead
+                                            to significant conclusions 
+                                            about the impact of sanctions
+                                            on development variables such
+                                            as education. As seen,
+                                            the median for the variable
+                                            us_length (indicating years
+                                            that the United States has
+                                            imposed sanctions is -0.11,
+                                            whereas that of Year (indicating
+                                            time since 1980 that has 
+                                            passed) is 0.62. The issue with adult
+                                            literacy rate as a measure of education,
+                                            however, is a general lack of availability
+                                            of data about adult literacy rate in 
+                                            many underdeveloped nations. As such,
+                                            though the results indicate that time
+                                            naturally leads to advancements in 
+                                            education, they also indicate that
+                                            sanctions can regress that development
+                                            by reducing adult literacy rate. Of 
+                                            course, because the 95% confidence 
+                                            interval does include 0 for 
+                                            sanction length, presumably
+                                            due to the sparcity of data, and the 
+                                            numbers are quite variable, this 
+                                            conclusion cannot be considered 
+                                            statistically significant."),
                                           gt_output(outputId = "education_reg")),
                                  tabPanel("Predicted Imports (USD)",
+                                          br(),
                                           plotOutput("imports"),
                                           br(),
+                                          p("The above model was generated
+                                            through the use of a stan_glm
+                                            model and the posterior_epred
+                                            function which essentially
+                                            extracts the posterior draws
+                                            of the conditional expectation,
+                                            generating a predictive model.
+                                            The regression table displayed
+                                            below illustrates the
+                                            results of running stan_glm
+                                            on the variable imports,
+                                            showing the impact of both
+                                            time and sanctions individually.
+                                            The table illustrates quite 
+                                            interesting results that lead
+                                            to significant conclusions 
+                                            about the impact of sanctions
+                                            on development variables such
+                                            as imports. As seen,
+                                            the median for the variable
+                                            us_length (indicating years
+                                            that the United States has
+                                            imposed sanctions is -$2,221,753,914,
+                                            whereas that of Year (indicating
+                                            time since 1980 that has 
+                                            passed) is $3,833,139,517.
+                                            Though the results indicate that time
+                                            naturally leads to increases in imports, 
+                                            they also indicate that
+                                            sanctions significantly regress that
+                                            development, heavily impacting economic
+                                            development. This is also clearly 
+                                            illustrated in the imports tab, where
+                                            the dynamic graph indicates economic
+                                            stagnation of imports correlating to
+                                            longer periods of sanctions. Furthermore,
+                                            the 95% confidence interval for the 
+                                            measure of us_length does not include
+                                            0, indicating that these results are
+                                            statistically significant."),
                                           gt_output(outputId = "imports_reg")),
                                  tabPanel("Predicted Exports (USD)",
+                                          br(),
                                           plotOutput("exports"),
                                           br(),
+                                          p("The above model was generated
+                                            through the use of a stan_glm
+                                            model and the posterior_epred
+                                            function which essentially
+                                            extracts the posterior draws
+                                            of the conditional expectation,
+                                            generating a predictive model.
+                                            The regression table displayed
+                                            below illustrates the
+                                            results of running stan_glm
+                                            on the variable exports,
+                                            showing the impact of both
+                                            time and sanctions individually.
+                                            The table illustrates quite 
+                                            interesting results that lead
+                                            to significant conclusions 
+                                            about the impact of sanctions
+                                            on development variables such
+                                            as exports. As seen,
+                                            the median for the variable
+                                            us_length (indicating years
+                                            that the United States has
+                                            imposed sanctions is -$2,394,596,413,
+                                            whereas that of Year (indicating
+                                            time since 1980 that has 
+                                            passed) is $4,063,460,508.
+                                            Though the results indicate that time
+                                            naturally leads to increases in exports, 
+                                            they also indicate that
+                                            sanctions significantly regress that
+                                            development, heavily impacting economic
+                                            development. This is also clearly 
+                                            illustrated in the exports tab, where
+                                            the dynamic graph indicates economic
+                                            stagnation of exports correlating to
+                                            longer periods of sanctions. Furthermore,
+                                            the 95% confidence interval for the 
+                                            measure of us_length does not include
+                                            0, indicating that these results are
+                                            statistically significant."),
                                           gt_output(outputId = "exports_reg")),
                                  tabPanel("Predicted Democracy Scores",
+                                          br(),
                                           plotOutput("democracy"),
                                           br(),
+                                          p("The above model was generated
+                                            through the use of a stan_glm
+                                            model and the posterior_epred
+                                            function which essentially
+                                            extracts the posterior draws
+                                            of the conditional expectation,
+                                            generating a predictive model.
+                                            The regression table displayed
+                                            below illustrates the
+                                            results of running stan_glm
+                                            on the variable democracy,
+                                            showing the impact of both
+                                            time and sanctions individually.
+                                            The table illustrates quite 
+                                            interesting results that lead
+                                            to significant conclusions 
+                                            about the impact of sanctions
+                                            on development variables such
+                                            as democratization. As seen,
+                                            the median for the variable
+                                            us_length (indicating years
+                                            that the United States has
+                                            imposed sanctions is -0.88,
+                                            whereas that of Year (indicating
+                                            time since 1980 that has 
+                                            passed) is 0.44.
+                                            Though the results indicate that time
+                                            naturally leads to democratization 
+                                            over time, they more importantly indicate
+                                            that the impact of sanctions is greater
+                                            than that of time, with the median of
+                                            us_length being greater than that of
+                                            Year, indicating the longer the sanction
+                                            length, the greater the trend towards
+                                            autocracies as opposed to democratic
+                                            systems. This dangerous conclusion is
+                                            supported by the the 95% confidence 
+                                            interval as it does not include 0 for the 
+                                            measure of us_length or Year,
+                                            indicating that these results are
+                                            statistically significant."),
                                           gt_output(outputId = "democracy_reg")))))),
     
     
