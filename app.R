@@ -1025,15 +1025,17 @@ server <- function(input, output) {
         
     })
     
+    #code to include regression tables
+    
     output$infant_reg <- render_gt(infant_reg)
      
     output$education_reg <- render_gt(education_reg)
      
-     output$imports_reg <- render_gt(imports_reg)
+    output$imports_reg <- render_gt(imports_reg)
      
-     output$exports_reg <- render_gt(exports_reg)
+    output$exports_reg <- render_gt(exports_reg)
      
-     output$democracy_reg <- render_gt(democracy_reg)
+    output$democracy_reg <- render_gt(democracy_reg)
     
 }
 
