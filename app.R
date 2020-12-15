@@ -18,6 +18,9 @@ library(gganimate)
 library(gifski)
 library(rstanarm)
 library(shinythemes)
+library(gt)
+library(gtsummary)
+library(broom.mixed)
 
 #reading in necessary data and models from raw_data file
 
@@ -27,17 +30,24 @@ country_vector <- unique(final$countryname)
 
 final_model <- read_csv("final_model.csv")
 
-fit_1 <- stan_glm(data = final_model, 
-                  formula = infant_mortality ~ us_length + Year, refresh = 0)
+#reading in all of the stan_glm models
 
-fit_2 <- stan_glm(data = final_model, 
-                  formula = adult_literacy ~ us_length + Year, refresh = 0)
+# fit_1 <- stan_glm(data = final_model, 
+#                   formula = infant_mortality ~ us_length + Year, refresh = 0)
 
-fit_3 <- stan_glm(data = final_model, 
-                  formula = imports ~ us_length + Year, refresh = 0)
+# fit_2 <- stan_glm(data = final_model, 
+#                   formula = adult_literacy ~ us_length + Year, refresh = 0)
 
-fit_4 <- stan_glm(data = final_model, 
-                  formula = exports ~ us_length + Year, refresh = 0)
+#fit_3 <- stan_glm(data = final_model, 
+                  #formula = imports ~ us_length + Year, refresh = 0)
+
+#fit_4 <- stan_glm(data = final_model, 
+                  #formula = exports ~ us_length + Year, refresh = 0)
+
+#fit_5 <- stan_glm(data = final_model, 
+                  #formula = democracy ~ us_length + Year, refresh = 0)
+
+#reading in the saved RDS files of prosterior_epred predictions
 
 predictions <- readRDS("predictions.RDS")
 
@@ -47,6 +57,47 @@ predictions_3 <- readRDS("predictions_3.RDS")
 
 predictions_4 <- readRDS("predictions_4.RDS")
 
+predictions_5 <- readRDS("predictions_5.RDS")
+
+#creating the regression tables later referenced
+
+infant_reg <- stan_glm(data = final_model, 
+                       formula = infant_mortality ~ us_length + Year, refresh = 0) %>%
+  tbl_regression() %>%
+  as_gt() %>%
+  tab_header(title = "Regression of Infant Mortality Rate", 
+             subtitle = "The Effect of Sanctions and Time on Infant Mortality
+               Rate")
+
+education_reg <- stan_glm(data = final_model, 
+                          formula = adult_literacy ~ us_length + Year, refresh = 0) %>%
+  tbl_regression() %>%
+  as_gt() %>%
+  tab_header(title = "Regression of Adult Literacy Rate", 
+             subtitle = "The Effect of Sanctions and Time on Adult Literacy
+              Rate")
+ 
+ imports_reg <- stan_glm(data = final_model, 
+                         formula = imports ~ us_length + Year, refresh = 0) %>%
+   tbl_regression() %>%
+   as_gt() %>%
+   tab_header(title = "Regression of Imports of Goods and Services (USD)", 
+              subtitle = "The Effect of Sanctions and Time on Imports (USD)")
+ 
+ exports_reg <- stan_glm(data = final_model, 
+                         formula = exports ~ us_length + Year, refresh = 0) %>%
+   tbl_regression() %>%
+   as_gt() %>%
+   tab_header(title = "Regression of Exports of Goods and Services (USD)", 
+              subtitle = "The Effect of Sanctions and Time on Exports (USD)")
+ 
+ democracy_reg <- stan_glm(data = final_model, 
+                           formula = Democracy ~ us_length + Year, refresh = 0) %>%
+   tbl_regression() %>%
+   as_gt() %>%
+   tab_header(title = "Regression of Democracy Scores", 
+              subtitle = "The Effect of Sanctions and Time on the Democratic
+                Development of Nations")
 
 # Define UI 
 ui <- navbarPage(
@@ -130,6 +181,55 @@ ui <- navbarPage(
              )
     ),
      
+    tabPanel("Democracy",
+             titlePanel(strong("Impact of Sanctions on Democratization")),
+             fixedRow(
+               column(4,
+                      p("One of the most cited reasons for sanctions has 
+                        typically been a lack of democratization in nations 
+                        around the world. The more autocratic and unwiling a 
+                        nation is to comply with the West, and more specifically,
+                        the United States, the increased likelihood of sanctions.
+                        The logic behind this punitive measure is use as a 
+                        warning or deterrent to ensure that nations move
+                        towards democratic systems, but, as the data and graphs
+                        illustrated here indicate, that isn't always the case."), 
+                      h3("Democracy Scores"), 
+                      p("The scores used to measure democracy stem from the
+                        Center for Systemic Peace's Polity IV Project. The project
+                        defines democracy as 'three essential, interdependent
+                        elements': 'One is the presence of institutions and 
+                        procedures through which citizens can express effective 
+                        preferences about alternative policies and leaders. 
+                        Second is the existence of institutionalized constraints 
+                        on the exercise of power by the executive. Third is the 
+                        guarantee of civil liberties to all citizens in their 
+                        daily lives and in acts of political participation.' As
+                        such, countries are assigned their respective weights
+                        as shown by the scale in the image. As for nations with
+                        scores of -66, -77, or -88: those with (-66) are cases 
+                        of 'foreign interruption' and are treated as 'system
+                        missing.' Those with a score of -77 are essentially in
+                        states of anarchy and are converted to neutral polity
+                        scores of 0. Those with -88 indicate a nation in a state
+                        of transition and are 'prorated across the span of the 
+                        transition."),
+                      br()),
+               column(5,
+                      imageOutput("dem_plot"))), 
+             br(),
+             h3("Evaluate the Data: Democratization Progression by Country"),
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("select_country",
+                             "Select Country",
+                             choices = country_vector)
+               ),
+               mainPanel(
+                 plotOutput("demplots")
+               )
+             )
+    ),
     #education data and graphs - analysis of adult literacy rates
             
     tabPanel("Education",
@@ -181,9 +281,9 @@ ui <- navbarPage(
     #imports data and graphs - analysis of imports in current USD data
     
      tabPanel("Imports",
+              titlePanel(strong("Impact of Sanctions on Imports")),
               fixedRow(
                   column(4,
-                         titlePanel(strong("Impact of Sanctions on Imports")),
              p("Imports are quite crucial to development as they help to grow
                local economies by bringing in new products and businesses,
                potentially helping to build products locally. Sanctions,
@@ -207,8 +307,11 @@ ui <- navbarPage(
                below.")),
              br(),
              br(),
+             br(),
              column(5,
                     imageOutput("sanc_health_dem_edu_imp"))),
+                br(),
+                br(),
                 br(),
                 h3("Evaluate the Data: Imports of Goods and Services (USD)"),
                 sidebarLayout(
@@ -277,13 +380,13 @@ ui <- navbarPage(
                  sidebarPanel(
                      h3("Predicting Development Based on Sanction Length"),
                      h5("The following interactive model can be used to predict
-                        four main development indicators: public health,
-                        education, imports, and exports. Set each of the sliders
-                        to a situation you desire. For instance, a sanction 
-                        length slider set at 10 indicates 10 years of US-imposed 
-                        sanctions. As for the Year slider, if set at 15, that
-                        indicates a point 15 years from 1980 and would set the 
-                        prediction for 2005."),
+                        four main development indicators: public health, 
+                        democracy, education, imports, and exports. Set each of 
+                        the sliders to a situation you desire. For instance, a 
+                        sanction length slider set at 10 indicates 10 years of 
+                        US-imposed sanctions. As for the Year slider, if set at 
+                        15, that indicates a point 15 years from 1980 and would 
+                        set the prediction for 2005."),
                      sliderInput("us_length", "Set Sanction Length",
                                  max = 25, min = 1, value = 10),
                      sliderInput("Year", 
@@ -293,13 +396,25 @@ ui <- navbarPage(
                  mainPanel(
                      tabsetPanel(id = "tabs",
                                  tabPanel("Predicted Infant Mortality Rate",
-                                          plotOutput("infant")),
+                                          plotOutput("infant"),
+                                          br(),
+                                          gt_output(outputId = "infant_reg")),
                                  tabPanel("Predicted Adult Literacy Rate",
-                                          plotOutput("adult")),
+                                          plotOutput("adult"),
+                                          br(),
+                                          gt_output(outputId = "education_reg")),
                                  tabPanel("Predicted Imports (USD)",
-                                          plotOutput("imports")),
+                                          plotOutput("imports"),
+                                          br(),
+                                          gt_output(outputId = "imports_reg")),
                                  tabPanel("Predicted Exports (USD)",
-                                          plotOutput("exports")))))),
+                                          plotOutput("exports"),
+                                          br()),
+                                          gt_output(outputId = "exports_reg")),
+                                 tabPanel("Predicted Democracy Scores",
+                                          plotOutput("democracy"),
+                                          br(),
+                                          gt_output(outputId = "democracy_reg"))))),
     
     
     #panel introducing me and the data sources
@@ -330,7 +445,15 @@ ui <- navbarPage(
              p("I referenced a number of datasets to obtain my data. 
                The sanctions data was obtained from the ", 
                tags$a(href = "https://www.polver.uni-konstanz.de/gschneider/research/archive/eusanct/",
-                      "EUSANCT dataset."), "The remainder of the data was 
+                      "EUSANCT dataset."), "The democracy dataset was obtained
+                      from the Center for Systemic Peace's ",
+               tags$a(href = "https://data.worldbank.org/indicator/SP.DYN.IMRT.IN", 
+                      "Integrated Network for
+                      Societal Conflict Research's Data Page"),
+               "and explanation of the variables was obtained from ",
+               tags$a(href = "http://www.systemicpeace.org/inscr/p5manualv2018.pdf",
+                      "here."), 
+               "The remainder of the data was 
                obtained from World Bank datasets, with the infant mortality rate
                data accessible",
                tags$a(href = "https://data.worldbank.org/indicator/SP.DYN.IMRT.IN", 
@@ -359,6 +482,21 @@ server <- function(input, output) {
             theme_bw()
     })
     
+  
+  #creating the democracy score plots for each of the countries
+  
+  output$demplots <- renderPlot({
+    dem_data %>%
+      filter(countryname == input$select_country) %>%
+      ggplot(aes(x = Year, y = Democracy, color = us_length)) +
+      geom_point() +
+      geom_smooth(method = "lm") +
+      labs(title = "Democracy Score Progression ",
+           x = "Year", y = "Democracy Score", 
+           color = "Length of US Sanctions") +
+      theme_bw()
+  })
+  
   #creating the adult literacy rate plots for each of the countries
   
     output$educationplots <- renderPlot({
@@ -449,6 +587,34 @@ server <- function(input, output) {
                  render = gifski_renderer("outfile_1.gif"))
          list(src  = "outfile_1.gif", contentType = "image/gif")
     })
+    
+    #reading in the cleaned democracy dataset and 
+    #creating the dynamic trends US sanctions and democracy graph
+      
+      dem_data <- read_csv("sanc_health_dem.csv")
+      
+      dem_data_new <- read_csv("new.csv")
+      
+      output$dem_data_new <- renderImage({
+        
+        outfile_d <- tempfile(fileext='.gif')
+        
+        dem_plot <- ggplot(dem_data_new, aes(x = Year, y = score, 
+                                             size = us_length)) +
+          geom_point(alpha = 0.5, color = "dodgerblue1") +
+          transition_reveal(Year) +
+          scale_size(range = c(2, 12)) +
+          labs(title = "Democracy and Autocracy Scores Over the Years", 
+               x = 'Year', y = "Indicator Score", 
+               size = "Length of US Sanctions") +
+          facet_wrap(~ indicator) +
+          theme_bw()
+        
+        animate(dem_plot, nframes = 75, 
+                render = gifski_renderer("outfile_d.gif"))
+        list(src  = "outfile_d.gif", contentType = "image/gif")
+      })
+      
     
     #reading in the cleaned adult literacy rate dataset and 
     #creating the dynamic trends US sanctions and education graph
@@ -641,9 +807,40 @@ server <- function(input, output) {
           
         }) 
         
+        observeEvent(input$run, {
+          
+          pp_5 <- predictions_5 %>%
+            filter(us_length == input$us_length, Year == input$Year) %>%
+            t() %>%
+            as_tibble() %>%
+            slice(1:4000) %>%
+            ggplot(aes(x = V1)) +
+            geom_histogram(aes(y = after_stat(count/sum(count))),
+                           bins = 100, color = "white", fill = "dodgerblue1", 
+                           alpha = 0.5) +
+            labs(title = "Predicted Democracy Score Distribution", 
+                 x = "Predicted Democracy Scores", 
+                 y = "Count") +
+            theme_bw()
+          
+          
+          output$democracy <- renderPlot({pp_5})
+          # End of observeEvent.
+          
+        }) 
+        
     })
     
-        
+    output$infant_reg <- render_gt(infant_reg)
+     
+    output$education_reg <- render_gt(education_reg)
+     
+     output$imports_reg <- render_gt(imports_reg)
+     
+     output$exports_reg <- render_gt(exports_reg)
+     
+     output$democracy_reg <- render_gt(democracy_reg)
+    
 }
 
 # Run the application
