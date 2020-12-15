@@ -30,23 +30,6 @@ country_vector <- unique(final$countryname)
 
 final_model <- read_csv("final_model.csv")
 
-#reading in all of the stan_glm models
-
-# fit_1 <- stan_glm(data = final_model, 
-#                   formula = infant_mortality ~ us_length + Year, refresh = 0)
-
-# fit_2 <- stan_glm(data = final_model, 
-#                   formula = adult_literacy ~ us_length + Year, refresh = 0)
-
-#fit_3 <- stan_glm(data = final_model, 
-                  #formula = imports ~ us_length + Year, refresh = 0)
-
-#fit_4 <- stan_glm(data = final_model, 
-                  #formula = exports ~ us_length + Year, refresh = 0)
-
-#fit_5 <- stan_glm(data = final_model, 
-                  #formula = democracy ~ us_length + Year, refresh = 0)
-
 #reading in the saved RDS files of prosterior_epred predictions
 
 predictions <- readRDS("predictions.RDS")
@@ -59,7 +42,7 @@ predictions_4 <- readRDS("predictions_4.RDS")
 
 predictions_5 <- readRDS("predictions_5.RDS")
 
-#creating the regression tables later referenced
+#creating the dtan_glm models and regression tables later referenced
 
 infant_reg <- stan_glm(data = final_model, 
                        formula = infant_mortality ~ us_length + Year, refresh = 0) %>%
@@ -205,8 +188,10 @@ ui <- navbarPage(
                         on the exercise of power by the executive. Third is the 
                         guarantee of civil liberties to all citizens in their 
                         daily lives and in acts of political participation.' As
-                        such, countries are assigned their respective weights
-                        as shown by the scale in the image. As for nations with
+                        such, countries are assigned their respective weights, 
+                        with higher scores indicating a more democratized nation,
+                        as shown in the legend below the drop-down menu.
+                        As for nations with
                         scores of -66, -77, or -88: those with (-66) are cases 
                         of 'foreign interruption' and are treated as 'system
                         missing.' Those with a score of -77 are essentially in
@@ -215,15 +200,18 @@ ui <- navbarPage(
                         of transition and are 'prorated across the span of the 
                         transition."),
                       br()),
+  
                column(5,
-                      imageOutput("dem_plot"))), 
-             br(),
+                      imageOutput("dem_data")),
+             br()),
              h3("Evaluate the Data: Democratization Progression by Country"),
              sidebarLayout(
                sidebarPanel(
                  selectInput("select_country",
                              "Select Country",
-                             choices = country_vector)
+                             choices = country_vector),
+                 img(src = "democracy_legend.png", align = "center", 
+                     height = 350, width = 400)
                ),
                mainPanel(
                  plotOutput("demplots")
@@ -409,12 +397,12 @@ ui <- navbarPage(
                                           gt_output(outputId = "imports_reg")),
                                  tabPanel("Predicted Exports (USD)",
                                           plotOutput("exports"),
-                                          br()),
+                                          br(),
                                           gt_output(outputId = "exports_reg")),
                                  tabPanel("Predicted Democracy Scores",
                                           plotOutput("democracy"),
                                           br(),
-                                          gt_output(outputId = "democracy_reg"))))),
+                                          gt_output(outputId = "democracy_reg")))))),
     
     
     #panel introducing me and the data sources
@@ -593,21 +581,18 @@ server <- function(input, output) {
       
       dem_data <- read_csv("sanc_health_dem.csv")
       
-      dem_data_new <- read_csv("new.csv")
-      
-      output$dem_data_new <- renderImage({
+      output$dem_data <- renderImage({
         
         outfile_d <- tempfile(fileext='.gif')
         
-        dem_plot <- ggplot(dem_data_new, aes(x = Year, y = score, 
+        dem_plot <- ggplot(dem_data, aes(x = Year, y = Democracy, 
                                              size = us_length)) +
           geom_point(alpha = 0.5, color = "dodgerblue1") +
           transition_reveal(Year) +
           scale_size(range = c(2, 12)) +
-          labs(title = "Democracy and Autocracy Scores Over the Years", 
-               x = 'Year', y = "Indicator Score", 
+          labs(title = "Democratization Over the Years", 
+               x = 'Year', y = "Democracy Score", 
                size = "Length of US Sanctions") +
-          facet_wrap(~ indicator) +
           theme_bw()
         
         animate(dem_plot, nframes = 75, 
